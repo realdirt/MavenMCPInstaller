@@ -4,12 +4,14 @@ import java.io.*;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 public class Main {
 
-    private String name = "";
+    private String name = "", path = "";
 
     public static void main(String[] args) {
 //        unzip(new File("mcp.zip"), new File("tmp"));
@@ -18,13 +20,26 @@ public class Main {
 
     public Main(String[] args) {
         for (int i = 0; i < args.length; i++) {
+            if (args[i].equals("-help")) {
+                sendHelp();
+            }
             if (args[i].equals("-name")) {
                 name = args[i + 1];
+                name = name.substring(0, 1).toUpperCase() + name.substring(1);
+            }
+            if (args[i].equals("-path")) {
+                path = args[i + 1].toLowerCase();
             }
         }
         if (name.equals("")) {
             System.err.println("Please enter a name");
+            sendHelp();
             System.exit(-1);
+        }
+        if (path.equals("")) {
+            System.err.println("Please enter a path");
+            sendHelp();
+            System.exit(-2);
         }
 
         File tmpDir = new File("tmp");
@@ -74,15 +89,20 @@ public class Main {
         File tmpSrcDir = new File(tmpDir, "src");
         File srcDir = new File("src");
 
+        System.out.println("creating src dir structure");
+
         new File(srcDir, "test/java").mkdirs();
 
-        System.out.println("creating src dir structure");
         File mainDir = new File(srcDir, "main");
         mainDir.mkdirs();
 
         File javaDir = new File(mainDir, "java");
         javaDir.mkdirs();
 
+        File pathDir = new File(javaDir, path.replace(".", "/"));
+        pathDir.mkdirs();
+
+        System.out.println("creating resources dir");
         File resourcesDir = new File(mainDir, "resources");
         resourcesDir.mkdirs();
 
@@ -98,8 +118,25 @@ public class Main {
             System.err.println("Error cannot find src dir");
             System.exit(2);
         }
+
+        System.out.println("Creating Main class");
+        File mainClass = new File(pathDir, name);
+        try {
+            BufferedWriter bw = new BufferedWriter(new FileWriter(mainClass));
+            bw.write("package " + path + ";");
+            bw.newLine();
+            bw.newLine();
+            bw.write("public class " + name + " {");
+            bw.newLine();
+            bw.write("}");
+            bw.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         System.out.println("Download pom.xml");
-        downloadFile("https://raw.githubusercontent.com/DasDirt/MCPRepository/master/pom.xml", new File("pom.xml"));
+        File pom = new File("pom.xml");
+        downloadFile("https://raw.githubusercontent.com/DasDirt/MCPRepository/master/pom.xml", pom);
 
         System.out.println("Creating .iml file");
         File iml = new File(name + ".iml");
@@ -114,6 +151,37 @@ public class Main {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        System.out.println("Replacing name and path");
+        try {
+            BufferedReader bufferedReader = new BufferedReader(new FileReader(pom));
+            List<String> lines = new ArrayList<>();
+            String line = "";
+            while ((line = bufferedReader.readLine()) != null) {
+                lines.add(line);
+            }
+            bufferedReader.close();
+
+            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(pom));
+            for (String s : lines) {
+                bufferedWriter.write(s.replace("de.dirty", path).replace("MavenMCP", name));
+                bufferedWriter.newLine();
+            }
+            bufferedWriter.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("deleting tmp dir");
+        deleteFolder(tmpDir);
+    }
+
+    private void sendHelp() {
+        System.out.println("---Usage---");
+        System.out.println("-help shows this output");
+        System.out.println("-name the name of your client");
+        System.out.println("-path your path like de.dirty");
+        System.out.println("-----------");
     }
 
     //https://stackabuse.com/how-to-download-a-file-from-a-url-in-java/
@@ -130,7 +198,7 @@ public class Main {
     }
 
     //https://www.codejava.net/java-se/file-io/programmatically-extract-a-zip-file-using-java
-    static void unzip(File zipFilePath, File destDir) {
+    private void unzip(File zipFilePath, File destDir) {
         if (!destDir.exists()) {
             destDir.mkdir();
         }
@@ -177,5 +245,21 @@ public class Main {
             Files.copy(sourceFolder.toPath(), destinationFolder.toPath(), StandardCopyOption.REPLACE_EXISTING);
             System.out.println("File copied :: " + destinationFolder);
         }
+    }
+
+    public static void deleteFolder(File folder) {
+        File[] files = folder.listFiles();
+        if (files != null) {
+            for (File f : files) {
+                if (f.isDirectory()) {
+                    deleteFolder(f);
+                } else {
+                    System.out.println("Deleting file: " + f.getName());
+                    f.delete();
+                }
+            }
+        }
+        System.out.println("Deleting folder: " + folder.getName());
+        folder.delete();
     }
 }
