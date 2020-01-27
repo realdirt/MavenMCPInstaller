@@ -120,7 +120,7 @@ public class Main {
         }
 
         System.out.println("Creating Main class");
-        File mainClass = new File(pathDir, name);
+        File mainClass = new File(pathDir, name + ".java");
         try {
             BufferedWriter bw = new BufferedWriter(new FileWriter(mainClass));
             bw.write("package " + path + ";");
