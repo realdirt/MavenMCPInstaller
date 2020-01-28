@@ -11,14 +11,13 @@ import java.util.zip.ZipInputStream;
 
 public class Main {
 
-    private String name = "", path = "";
-
     public static void main(String[] args) {
-//        unzip(new File("mcp.zip"), new File("tmp"));
         new Main(args);
     }
 
     public Main(String[] args) {
+        String path = "";
+        String name = "";
         for (int i = 0; i < args.length; i++) {
             if (args[i].equals("-help")) {
                 sendHelp();
@@ -48,32 +47,10 @@ public class Main {
 
         File zipFile = new File(tmpDir, "mcp.zip");
         System.out.println("Download mcp");
-        Thread downloadThread = new Thread(() -> {
-            downloadFile("http://www.modcoderpack.com/files/mcp918.zip", zipFile);
-        });
-        downloadThread.setName("downloadThread");
-        downloadThread.start();
-        try {
-            downloadThread.join();
-        } catch (InterruptedException e) {
-            System.out.println("error while joining download thread");
-            e.printStackTrace();
-            System.exit(4);
-        }
+        downloadFile("http://www.modcoderpack.com/files/mcp918.zip", zipFile);
 
         System.out.println("unzip mcp");
-        Thread unzipThread = new Thread(() -> {
-            unzip(zipFile, tmpDir);
-        });
-        unzipThread.setName("unzipThread");
-        unzipThread.start();
-        try {
-            unzipThread.join();
-        } catch (InterruptedException e) {
-            System.out.println("error while joining unzip thread");
-            e.printStackTrace();
-            System.exit(4);
-        }
+        unzip(zipFile, tmpDir);
 
         System.out.println("Decompiling mcp");
         Process p = null;
@@ -174,6 +151,20 @@ public class Main {
 
         System.out.println("deleting tmp dir");
         deleteFolder(tmpDir);
+
+        System.out.println("copy minecraft to java folder");
+        File tmpMinecraftDir = new File(javaDir, "/minecraft/");
+        try {
+            copyFolder(tmpMinecraftDir, javaDir);
+        } catch (IOException e) {
+            System.err.println("Error while copy minecraft to java folder");
+            e.printStackTrace();
+        }
+
+        System.out.println("Delete tmp minecraft dir");
+        deleteFolder(tmpMinecraftDir);
+
+
     }
 
     private void sendHelp() {
