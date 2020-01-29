@@ -179,7 +179,7 @@ public class Main {
     try {
       copyFolder(tmpMinecraftDir, javaDir);
     } catch (IOException e) {
-      System.err.println("Error while copy minecraft to java folder");
+      System.err.println("Error while copying minecraft to java folder");
       e.printStackTrace();
     }
 
@@ -189,7 +189,7 @@ public class Main {
 
   private void createFolder(File folder) {
     if (!folder.mkdirs()) {
-      System.err.println("Cannot create folder: " + folder.getName());
+      System.err.println("Cannot create the folder: " + folder.getName());
       System.exit(9);
     }
   }
@@ -282,7 +282,7 @@ public class Main {
         } else {
           System.out.println("Deleting file: " + f.getName());
           if (!f.delete()) {
-            System.err.println("Cannot delete file: " + f.getName());
+            System.err.println("Cannot delete the file: " + f.getName());
           }
         }
       }
