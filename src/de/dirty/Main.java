@@ -1,3 +1,9 @@
+/*
+ * Developed by DasDirt on 1/29/20, 3:36 PM.
+ * Copyright (c) 2020, for MavenMCPInstaller by DasDirt
+ * All rights reserved.
+ */
+
 package de.dirty;
 
 import java.io.BufferedInputStream;
@@ -19,6 +25,9 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 public class Main {
+
+  public static final int BUFFER_SIZE = 4096;
+
   /** Entry point of this program just calls the main class. */
   public static void main(final String[] args) {
     new Main(args);
@@ -26,6 +35,7 @@ public class Main {
 
   /** In this constructor handles everything. */
   public Main(final String[] args) {
+    // There are other ways to handle the args
     String path = "";
     String name = "";
     for (int i = 0; i < args.length; i++) {
@@ -196,9 +206,9 @@ public class Main {
   private void downloadFile(String url, File dest) {
     try (BufferedInputStream inputStream = new BufferedInputStream(new URL(url).openStream());
         FileOutputStream fileOS = new FileOutputStream(dest)) {
-      byte[] data = new byte[4096];
+      byte[] data = new byte[BUFFER_SIZE];
       int byteContent;
-      while ((byteContent = inputStream.read(data, 0, 1024)) != -1) {
+      while ((byteContent = inputStream.read(data, 0, BUFFER_SIZE)) != -1) {
         fileOS.write(data, 0, byteContent);
       }
     } catch (IOException e) {
@@ -220,7 +230,7 @@ public class Main {
         String filePath = destDir + File.separator + entry.getName();
         if (!entry.isDirectory()) {
           BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(filePath));
-          byte[] bytesIn = new byte[4096];
+          byte[] bytesIn = new byte[BUFFER_SIZE];
           int read;
           while ((read = zipIn.read(bytesIn)) != -1) {
             bos.write(bytesIn, 0, read);
