@@ -249,7 +249,8 @@ public class Main {
           new File(ideaFolder, "StartMC.xml"));
     }
 
-    System.out.println("----------------------------------------------------------------");
+    System.out.println(
+        "---------------------------------------------------------------------------------------");
     System.out.println("Introductions for IntelliJ IDEA (idk how this works in eclipse):");
     System.out.println("1. Open IntelliJ IDEA");
     System.out.println("2. Click on Open (File -> open if you are in a project)");
@@ -262,10 +263,13 @@ public class Main {
     System.out.println("9. Goto the Project tab and Select a Project SDK");
     System.out.println("10. Click on Ok");
     System.out.println("11. Run -> Edit Configurations");
-    System.out.println("12. Select the StartMC and select a module(There should be only one)");
-    System.out.println("13. Click on Ok");
+    System.out.println("12. Select the StartMC");
+    System.out.println(
+        "13. Check if you have the right module and working directory(workspace folder) selected");
+    System.out.println("14. Click on Ok");
     System.out.println("You're done now you should be able to start the client");
-    System.out.println("----------------------------------------------------------------");
+    System.out.println(
+        "---------------------------------------------------------------------------------------");
   }
 
   /*
