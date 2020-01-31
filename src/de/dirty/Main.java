@@ -35,19 +35,30 @@ public class Main {
 
   /** In this constructor handles everything. */
   public Main(final String[] args) {
+    System.setProperty(
+        "http.agent",
+        "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.4; en-US; rv:1.9.2.2)"
+            + " Gecko/20100316 Firefox/3.6.2");
     // There are other ways to handle the args
     String path = "";
     String name = "";
+    boolean addOptifine = false;
     for (int i = 0; i < args.length; i++) {
-      if (args[i].equals("-help")) {
-        sendHelp();
-      }
-      if (args[i].equals("-name")) {
-        name = args[i + 1];
-        name = name.substring(0, 1).toUpperCase() + name.substring(1);
-      }
-      if (args[i].equals("-path")) {
-        path = args[i + 1].toLowerCase();
+      switch (args[i].toLowerCase()) {
+        case "-name":
+          name = args[i + 1];
+          name = name.substring(0, 1).toUpperCase() + name.substring(1);
+          break;
+        case "-path":
+          path = args[i + 1].toLowerCase();
+          break;
+        case "-optifine":
+          addOptifine = true;
+          break;
+        case "-help":
+          sendHelp();
+          break;
+        default:
       }
     }
     if (name.equals("")) {
@@ -71,6 +82,9 @@ public class Main {
 
     System.out.println("unzip mcp");
     unzip(zipFile, tmpDir);
+
+    System.out.println("Remove pause from decompile.bat");
+    replaceStringInFile(new File(tmpDir, "decompile.bat"), "pause", "echo pause will be skipped");
 
     System.out.println("Decompiling mcp");
     try {
@@ -156,7 +170,32 @@ public class Main {
     System.out.println("Replacing name and path");
     replaceStringInFile(pom, "de.dirty", path);
     replaceStringInFile(pom, "MavenMCP", name);
-    
+
+    System.out.println("Creating workspace directory");
+    File workspace = new File("workspace");
+    createFolder(workspace);
+
+    System.out.println("Copying saves folder");
+    File tmpSaves = new File(tmpDir, "jars/saves");
+    File saves = new File(workspace, "saves");
+    try {
+      copyFolder(tmpSaves, saves);
+    } catch (IOException e) {
+      System.err.println("Error while copying saves to workspace folder");
+      e.printStackTrace();
+    }
+
+    System.out.println("Copying natives folder");
+    File tmpNatives = new File(tmpDir, "jars/versions/1.8.8/1.8.8-natives");
+    File natives = new File(workspace, "natives");
+    try {
+      copyFolder(tmpNatives, natives);
+    } catch (IOException e) {
+      System.err.println("Error while copying natives to workspace folder");
+      e.printStackTrace();
+      System.err.println("Without the natives the client will not run!");
+    }
+
     System.out.println("deleting tmp dir");
     deleteFolder(tmpDir);
 
@@ -174,6 +213,51 @@ public class Main {
 
     System.out.println("Replace the name in start file");
     replaceStringInFile(new File(javaDir, "Start.java"), "mcp", name);
+
+    if (addOptifine) {
+      System.out.println("Adding optifine");
+      createFolder(tmpDir);
+      File optifine = new File(tmpDir, "optifine.zip");
+      downloadFile(
+          "https://github.com/DasDirt/MCPRepository/raw/master/optifine_1.8.8_hd_u_h8.zip",
+          optifine);
+      unzip(optifine, tmpDir);
+      try {
+        copyFolder(tmpDir, javaDir);
+        deleteFolder(tmpDir);
+      } catch (IOException e) {
+        System.err.println("Error while copying optifine files");
+        e.printStackTrace();
+        System.out.println(
+            "Please copy the file from: "
+                + tmpDir.getAbsolutePath()
+                + " to "
+                + javaDir.getAbsolutePath());
+      }
+
+      System.out.println("Create intellij runs");
+      File ideaFolder = new File(".idea/runConfigurations");
+      createFolder(ideaFolder);
+      downloadFile("https://raw.githubusercontent.com/DasDirt/MCPRepository/master/pom.xml", new File(ideaFolder, "StartMC.xml"));
+    }
+
+    System.out.println("----------------------------------------------------------------");
+    System.out.println("Introductions for IntelliJ IDEA (idk how this works in eclipse):");
+    System.out.println("1. Open IntelliJ IDEA");
+    System.out.println("2. Click on Open (File -> open if you are in a project)");
+    System.out.println("3. Select the folder and press ok");
+    System.out.println("4. Wait a few seconds");
+    System.out.println("5. A Message should be appeared in the right bottom corner");
+    System.out.println("6. Mit dem Titel \"Non-managed pom.xml file found:\"");
+    System.out.println("7. As soon as you see it you have to click on \"Add as Maven Project\"");
+    System.out.println("8. Click on File -> Project Structure");
+    System.out.println("9. Goto the Project tab and Select a Project SDK");
+    System.out.println("10. Click on Ok");
+    System.out.println("11. Run -> Edit Configurations");
+    System.out.println("12. Select the StartMC and select a module(There should be only one)");
+    System.out.println("13. Click on Ok");
+    System.out.println("You're done now you should be able to start the client");
+    System.out.println("----------------------------------------------------------------");
   }
 
   private void createFolder(File folder) {
@@ -188,6 +272,7 @@ public class Main {
     System.out.println("-help shows this output");
     System.out.println("-name the name of your client");
     System.out.println("-path your path like de.dirty");
+    System.out.println("-optifine adds optifine to your project");
     System.out.println("-----------");
   }
 
