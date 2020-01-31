@@ -197,7 +197,7 @@ public class Main {
     }
 
     System.out.println("deleting tmp dir");
-    deleteFolder(tmpDir);
+    delete(tmpDir);
 
     System.out.println("copy minecraft to java folder");
     File tmpMinecraftDir = new File(javaDir, "/minecraft/");
@@ -209,7 +209,7 @@ public class Main {
     }
 
     System.out.println("Delete tmp minecraft dir");
-    deleteFolder(tmpMinecraftDir);
+    delete(tmpMinecraftDir);
 
     System.out.println("Replace the name in start file");
     replaceStringInFile(new File(javaDir, "Start.java"), "mcp", name);
@@ -223,8 +223,14 @@ public class Main {
           optifine);
       unzip(optifine, tmpDir);
       try {
+        System.out.println("Replacing wrong imports");
+        handleDir(tmpDir);
+        System.out.println("Delete tmp zip file");
+        delete(optifine);
+        System.out.println("Copy optifine src");
         copyFolder(tmpDir, javaDir);
-        deleteFolder(tmpDir);
+        System.out.println("Delete tmp dir");
+        delete(tmpDir);
       } catch (IOException e) {
         System.err.println("Error while copying optifine files");
         e.printStackTrace();
@@ -238,7 +244,9 @@ public class Main {
       System.out.println("Create intellij runs");
       File ideaFolder = new File(".idea/runConfigurations");
       createFolder(ideaFolder);
-      downloadFile("https://raw.githubusercontent.com/DasDirt/MCPRepository/master/StartMC.xml", new File(ideaFolder, "StartMC.xml"));
+      downloadFile(
+          "https://raw.githubusercontent.com/DasDirt/MCPRepository/master/StartMC.xml",
+          new File(ideaFolder, "StartMC.xml"));
     }
 
     System.out.println("----------------------------------------------------------------");
@@ -258,6 +266,26 @@ public class Main {
     System.out.println("13. Click on Ok");
     System.out.println("You're done now you should be able to start the client");
     System.out.println("----------------------------------------------------------------");
+  }
+
+  /*
+   * This method replaces the import "javax.vecmath.Matrix4f"
+   * to "org.lwjgl.util.vector.Matrix4f".
+   */
+  private void handleDir(File file) {
+    File[] files = file.listFiles();
+    if (files != null) {
+      for (File file1 : files) {
+        if (file1.isDirectory()) {
+          handleDir(file1);
+        } else {
+          System.out.println("Replacing imports in:" + file1.getName());
+          replaceStringInFile(file1, "javax.vecmath.Matrix4f", "org.lwjgl.util.vector.Matrix4f");
+        }
+      }
+    } else {
+      System.err.println("No optifine content found");
+    }
   }
 
   private void createFolder(File folder) {
@@ -358,12 +386,12 @@ public class Main {
   }
 
   // https://softwarecave.org/2018/03/24/delete-directory-with-contents-in-java/
-  private void deleteFolder(final File folder) {
+  private void delete(final File folder) {
     File[] files = folder.listFiles();
     if (files != null) {
       for (File f : files) {
         if (f.isDirectory()) {
-          deleteFolder(f);
+          delete(f);
         } else {
           System.out.println("Deleting file: " + f.getName());
           if (!f.delete()) {
