@@ -8,24 +8,24 @@ package de.dirty;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 public class Main {
 
+  public static final Charset CHARSET = StandardCharsets.UTF_8;
   public static final int BUFFER_SIZE = 4096;
 
   /** Entry point of this program just calls the main class. */
@@ -75,12 +75,14 @@ public class Main {
     System.out.println("Decompiling mcp");
     try {
       Runtime.getRuntime()
-          .exec("cmd /C start /d \"" + tmpDir.getAbsolutePath() + "\" /wait decompile.bat");
-    } catch (IOException e) {
+          .exec("cmd /C start /d \"" + tmpDir.getAbsolutePath() + "\" /wait decompile.bat")
+          .waitFor();
+    } catch (IOException | InterruptedException e) {
       e.printStackTrace();
       System.err.println("Error while decompiling mcp");
       System.exit(1);
     }
+
     System.out.println("Copying src");
     File srcDir = new File("src");
 
@@ -101,7 +103,7 @@ public class Main {
     File resourcesDir = new File(mainDir, "resources");
     createFolder(resourcesDir);
 
-    File tmpSrcDir = new File(tmpDir, "src");
+    File tmpSrcDir = new File(tmpDir, "src/");
     if (tmpSrcDir.exists() && tmpSrcDir.isDirectory()) {
       try {
         copyFolder(tmpSrcDir, javaDir);
@@ -152,25 +154,9 @@ public class Main {
     }
 
     System.out.println("Replacing name and path");
-    try {
-      BufferedReader bufferedReader = new BufferedReader(new FileReader(pom));
-      List<String> lines = new ArrayList<>();
-      String line;
-      while ((line = bufferedReader.readLine()) != null) {
-        lines.add(line);
-      }
-      bufferedReader.close();
-
-      BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(pom));
-      for (String s : lines) {
-        bufferedWriter.write(s.replace("de.dirty", path).replace("MavenMCP", name));
-        bufferedWriter.newLine();
-      }
-      bufferedWriter.close();
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-
+    replaceStringInFile(pom, "de.dirty", path);
+    replaceStringInFile(pom, "MavenMCP", name);
+    
     System.out.println("deleting tmp dir");
     deleteFolder(tmpDir);
 
@@ -185,6 +171,9 @@ public class Main {
 
     System.out.println("Delete tmp minecraft dir");
     deleteFolder(tmpMinecraftDir);
+
+    System.out.println("Replace the name in start file");
+    replaceStringInFile(new File(javaDir, "Start.java"), "mcp", name);
   }
 
   private void createFolder(File folder) {
@@ -200,6 +189,17 @@ public class Main {
     System.out.println("-name the name of your client");
     System.out.println("-path your path like de.dirty");
     System.out.println("-----------");
+  }
+
+  private void replaceStringInFile(File file, String regex, String replacement) {
+    Path path = file.toPath();
+    try {
+      String content = new String(Files.readAllBytes(path), CHARSET);
+      content = content.replaceAll(regex, replacement);
+      Files.write(path, content.getBytes(CHARSET));
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 
   // https://stackabuse.com/how-to-download-a-file-from-a-url-in-java/
