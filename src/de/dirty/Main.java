@@ -238,7 +238,7 @@ public class Main {
       System.out.println("Create intellij runs");
       File ideaFolder = new File(".idea/runConfigurations");
       createFolder(ideaFolder);
-      downloadFile("https://raw.githubusercontent.com/DasDirt/MCPRepository/master/pom.xml", new File(ideaFolder, "StartMC.xml"));
+      downloadFile("https://raw.githubusercontent.com/DasDirt/MCPRepository/master/StartMC.xml", new File(ideaFolder, "StartMC.xml"));
     }
 
     System.out.println("----------------------------------------------------------------");
