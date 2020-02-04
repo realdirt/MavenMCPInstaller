@@ -250,16 +250,20 @@ public class Main {
           optifine);
       unzip(optifine, tmpDir);
       try {
-        System.out.println("Replacing wrong imports");
-        handleDir(tmpDir);
         System.out.println("Delete tmp zip file");
         delete(optifine);
-        System.out.println("Copy optifine src");
-        File optifineAssetsDir = new File(tmpDir, "assets");
-        copyFolder(optifineAssetsDir, assets);
 
+        System.out.println("Copy optifine assets");
+        File optifineAssetsDir = new File(tmpDir, "assets");
+        copyFolder(optifineAssetsDir, assets); // fix picture copy bug
+
+        System.out.println("deleting assets");
         delete(optifineAssetsDir);
 
+        System.out.println("Replacing wrong imports");
+        handleDir(tmpDir);
+
+        System.out.println("copy optifine src");
         copyFolder(tmpDir, javaDir);
         System.out.println("Delete tmp dir");
         delete(tmpDir);
@@ -272,14 +276,14 @@ public class Main {
                 + " to "
                 + javaDir.getAbsolutePath());
       }
-
-      System.out.println("Create intellij runs");
-      File ideaFolder = new File(".idea/runConfigurations");
-      createFolder(ideaFolder);
-      downloadFile(
-          "https://raw.githubusercontent.com/DasDirt/MCPRepository/master/StartMC.xml",
-          new File(ideaFolder, "StartMC.xml"));
     }
+
+    System.out.println("Create intellij runs");
+    File ideaFolder = new File(".idea/runConfigurations");
+    createFolder(ideaFolder);
+    downloadFile(
+        "https://raw.githubusercontent.com/DasDirt/MCPRepository/master/StartMC.xml",
+        new File(ideaFolder, "StartMC.xml"));
 
     System.out.println(
         "---------------------------------------------------------------------------------------");
@@ -316,7 +320,7 @@ public class Main {
           handleDir(file1);
         } else {
           System.out.println("Replacing imports in:" + file1.getName());
-          replaceStringInFile(file1, "javax.vecmath.Matrix4f", "org.lwjgl.util.vector.Matrix4f");
+          replaceStringInFile(file1, "javax.vecmath.Matrix4f", "net.minecraft.util.Matrix4f");
         }
       }
     } else {
