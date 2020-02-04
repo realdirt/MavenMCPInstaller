@@ -196,6 +196,33 @@ public class Main {
       System.err.println("Without the natives the client will not run!");
     }
 
+    File jarFile = new File(tmpDir, "jars/versions/1.8.8/1.8.8.jar");
+    File jarTmpDir = new File(tmpDir, "jarTmp");
+    createFolder(jarTmpDir);
+    System.out.println("unzip Assets");
+    unzip(jarFile, jarTmpDir);
+    System.out.println("Copying Assets");
+    File tmpAssets = new File(jarTmpDir, "assets");
+    File assets = new File(resourcesDir, "assets");
+    try {
+      copyFolder(tmpAssets, assets);
+    } catch (IOException e) {
+      System.err.println("Error while copying assets to resources folder");
+      e.printStackTrace();
+    }
+    System.out.println("Copying jars assets");
+    File jarsAssetsFolder = new File(tmpDir, "jars/assets");
+    File workspaceAssetsFolder = new File(workspace, "assets");
+    createFolder(workspaceAssetsFolder);
+    try {
+      copyFolder(jarsAssetsFolder, workspaceAssetsFolder);
+    } catch (IOException e) {
+      System.err.println("Error while copying assets to resources folder");
+      e.printStackTrace();
+    }
+
+    delete(jarTmpDir);
+
     System.out.println("deleting tmp dir");
     delete(tmpDir);
 
@@ -228,6 +255,11 @@ public class Main {
         System.out.println("Delete tmp zip file");
         delete(optifine);
         System.out.println("Copy optifine src");
+        File optifineAssetsDir = new File(tmpDir, "assets");
+        copyFolder(optifineAssetsDir, assets);
+
+        delete(optifineAssetsDir);
+
         copyFolder(tmpDir, javaDir);
         System.out.println("Delete tmp dir");
         delete(tmpDir);
@@ -345,6 +377,10 @@ public class Main {
       ZipEntry entry = zipIn.getNextEntry();
       while (entry != null) {
         String filePath = destDir + File.separator + entry.getName();
+        File tmpFile = new File(filePath);
+        if (!tmpFile.getParentFile().exists()) {
+          createFolder(tmpFile.getParentFile());
+        }
         if (!entry.isDirectory()) {
           BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(filePath));
           byte[] bytesIn = new byte[BUFFER_SIZE];
@@ -354,8 +390,7 @@ public class Main {
           }
           bos.close();
         } else {
-          File dir = new File(filePath);
-          createFolder(dir);
+          createFolder(tmpFile);
         }
         zipIn.closeEntry();
         entry = zipIn.getNextEntry();
